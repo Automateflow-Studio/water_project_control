@@ -61,9 +61,9 @@
         </div>
     </nav>
 
-    <!-- ربط الـ Frontend مع Google Apps Script -->
+    <!-- ربط الـ Frontend مع Google Apps Script الجديد -->
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwewe9lw-A0bYcGse5nnGfrzfxQwYBrtAasPReMB2TKHJx-ElhYiHt9sgnPNxwL24Sa/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4t1lqI0lVj2mVF4VaDKa-wHjPRifBtd10x5fHzHLZospUcDDE6aM_-YTRIn4E_tZK/exec';
 
         async function uploadAndProcessBOQ() {
             const fileInput = document.getElementById('boqImage');
@@ -76,12 +76,10 @@
 
             const file = fileInput.files[0];
             
-            // تغيير حالة الزر أثناء المعالجة
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
             try {
-                // تحويل الصورة إلى Base64 لضمان إرسالها بسلاسة عبر POST request إلى Google Apps Script
                 const base64Data = await toBase64(file);
                 
                 const payload = {
@@ -93,7 +91,7 @@
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', // لتجنب مشاكل الـ CORS مع Google Scripts
+                        'Content-Type': 'text/plain;charset=utf-8',
                     },
                     body: JSON.stringify(payload)
                 });
@@ -106,7 +104,6 @@
                     throw new Error(result.message || 'حدث خطأ في المعالجة');
                 }
 
-                // التعامل مع الـ JSON الراجع وتحديث الواجهة
                 renderBOQData(result);
 
             } catch (error) {
@@ -118,7 +115,6 @@
             }
         }
 
-        // دالة مساعدة لتحويل الملف إلى Base64
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
