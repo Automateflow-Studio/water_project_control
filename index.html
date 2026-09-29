@@ -15,7 +15,7 @@
     <!-- رأس الصفحة -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="text-xs text-slate-400">م. كريم • مهندس موقع • الإثنين 28 سبتمبر</div>
+            <div class="text-xs text-slate-400">م. كريم • مهندس موقع</div>
             <h1 class="text-lg font-bold text-teal-400">محطة الريحانة</h1>
         </div>
     </header>
@@ -39,7 +39,7 @@
             </div>
             <div class="text-left">
                 <span id="grandTotal" class="text-lg font-bold text-amber-400">0</span>
-                <p class="text-xs text-slate-400">الإجمالي الكلي (جنيه/عملة)</p>
+                <p class="text-xs text-slate-400">الإجمالي الكلي</p>
             </div>
         </div>
 
@@ -47,7 +47,7 @@
 
         <!-- قائمة البنود الديناميكية -->
         <div id="itemsContainer" class="space-y-3">
-            <p class="text-center text-slate-500 text-sm py-6">قم بررفع صورة المقايسة لبدء استخراج البنود وتحليلها...</p>
+            <p class="text-center text-slate-500 text-sm py-6">قم برفع صورة المقايسة لبدء استخراج البنود وتحليلها...</p>
         </div>
 
     </main>
@@ -61,9 +61,9 @@
         </div>
     </nav>
 
-    <!-- ربط الـ Frontend مع n8n Webhook -->
+    <!-- ربط الـ Frontend مع Google Apps Script -->
     <script>
-        const N8N_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/your-webhook-id'; // ضعي هنا رابط الـ Webhook الخاص بكِ
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwewe9lw-A0bYcGse5nnGfrzfxQwYBrtAasPReMB2TKHJx-ElhYiHt9sgnPNxwL24Sa/exec';
 
         async function uploadAndProcessBOQ() {
             const fileInput = document.getElementById('boqImage');
@@ -75,42 +75,63 @@
             }
 
             const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append('data', file); // حقل الملف المطابق للـ Webhook
-
+            
             // تغيير حالة الزر أثناء المعالجة
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="animate-pulse">جاري تحليل المقايسة بالذكاء الاصطناعي...</span>';
+            submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
             try {
-                const response = await fetch(N8N_WEBHOOK_URL, {
+                // تحويل الصورة إلى Base64 لضمان إرسالها بسلاسة عبر POST request إلى Google Apps Script
+                const base64Data = await toBase64(file);
+                
+                const payload = {
+                    fileName: file.name,
+                    mimeType: file.type,
+                    fileData: base64Data
+                };
+
+                const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', // لتجنب مشاكل الـ CORS مع Google Scripts
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) throw new Error('فشل الاتصال بالخادم');
 
                 const result = await response.json();
                 
-                // التعامل مع الـ JSON الراجع من الـ Workflow وتحديث الواجهة
+                if (result.status === 'error') {
+                    throw new Error(result.message || 'حدث خطأ في المعالجة');
+                }
+
+                // التعامل مع الـ JSON الراجع وتحديث الواجهة
                 renderBOQData(result);
 
             } catch (error) {
                 console.error(error);
-                alert('حدث خطأ أثناء رفع الصورة أو تحليلها. تأكدي من رابط الـ Webhook.');
+                alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>تحليل وعرض البنود</span>';
             }
         }
 
+        // دالة مساعدة لتحويل الملف إلى Base64
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+
         function renderBOQData(data) {
-            // استخراج البنود والإجمالي من استجابة الـ Workflow
             const items = data.items || [];
             const grandTotal = data.grand_total || 0;
 
             document.getElementById('itemsCount').innerText = items.length;
-            document.getElementById('grandTotal').innerText = grandTotal.toLocaleString();
+            document.getElementById('grandTotal').innerText = Number(grandTotal).toLocaleString();
 
             const container = document.getElementById('itemsContainer');
             container.innerHTML = '';
@@ -124,22 +145,22 @@
                 const card = `
                     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm hover:border-teal-500 transition">
                         <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs bg-slate-700 text-teal-400 px-2 py-1 rounded-lg font-mono">بند: ${item.item_number}</span>
-                            <span class="text-xs bg-amber-900/40 text-amber-300 px-2 py-1 rounded-lg">${item.unit}</span>
+                            <span class="text-xs bg-slate-700 text-teal-400 px-2 py-1 rounded-lg font-mono">بند: ${item.item_number || '-'}</span>
+                            <span class="text-xs bg-amber-900/40 text-amber-300 px-2 py-1 rounded-lg">${item.unit || '-'}</span>
                         </div>
-                        <h3 class="font-bold text-slate-100 text-sm mb-3">${item.title}</h3>
+                        <h3 class="font-bold text-slate-100 text-sm mb-3">${item.title || item.description || ''}</h3>
                         <div class="grid grid-cols-3 gap-2 text-xs bg-slate-900/50 p-2.5 rounded-xl border border-slate-800 text-center">
                             <div>
                                 <span class="text-slate-400 block mb-1">الكمية</span>
-                                <span class="font-bold text-teal-300">${item.quantity}</span>
+                                <span class="font-bold text-teal-300">${item.quantity || 0}</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block mb-1">السعر</span>
-                                <span class="font-bold text-slate-200">${item.unit_price.toLocaleString()}</span>
+                                <span class="font-bold text-slate-200">${Number(item.unit_price || 0).toLocaleString()}</span>
                             </div>
                             <div>
                                 <span class="text-slate-400 block mb-1">الإجمالي</span>
-                                <span class="font-bold text-amber-400">${item.total.toLocaleString()}</span>
+                                <span class="font-bold text-amber-400">${Number(item.total || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
