@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محطة الريحانة - متابعة المقايسات</title>
+    <title>نظام متابعة المقايسات - تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -15,48 +15,65 @@
     <!-- رأس الصفحة -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="text-xs text-slate-400">متابعة الموقع</div>
-            <h1 class="text-lg font-bold text-teal-400">محطة الريحانة</h1>
+            <div class="text-xs text-slate-400" id="userInfo">تسجيل الدخول مطلوب</div>
+            <h1 class="text-lg font-bold text-teal-400">نظام إدارة المشاريع</h1>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- قسم تسجيل دخول المهندس -->
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
-            <label class="block text-sm font-semibold mb-2 text-slate-300">معرف المهندس (Engineer ID)</label>
-            <div class="flex gap-2">
-                <input type="text" id="engineerIdInput" placeholder="أدخل رقمك التعريفي (مثال: eng_01)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
-                <button onclick="saveEngineerSession()" class="bg-slate-700 hover:bg-slate-600 text-teal-400 text-xs font-bold px-4 py-2 rounded-xl transition">حفظ</button>
+        <!-- شاشة تسجيل الدخول -->
+        <div id="loginSection" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-sm">
+            <h2 class="text-md font-bold text-teal-400 mb-4 text-center">تسجيل دخول المهندس</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-slate-300">اسم المستخدم</label>
+                    <input type="text" id="usernameInput" placeholder="أدخل اسم المستخدم" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-slate-300">كلمة المرور</label>
+                    <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
+                </div>
+                <button onclick="loginUser()" id="loginBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg mt-2">
+                    دخول
+                </button>
             </div>
         </div>
 
-        <!-- قسم رفع المقايسة -->
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
-            <label class="block text-sm font-semibold mb-2 text-slate-300">إرفاق صورة المناقصة / المقايسة</label>
-            <input type="file" id="boqImage" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer">
-            <button onclick="uploadAndProcessBOQ()" id="submitBtn" class="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg flex justify-center items-center">
-                <span>تحليل وعرض البنود</span>
-            </button>
-        </div>
-
-        <!-- ملخص الحالة العامة -->
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm flex justify-between items-center">
-            <div>
-                <span id="itemsCount" class="text-xl font-bold text-teal-400">0</span>
-                <p class="text-xs text-slate-400">إجمالي البنود المستخرجة</p>
+        <!-- لوحة التحكم (تُخفي حتى يتم تسجيل الدخول) -->
+        <div id="dashboardSection" class="hidden space-y-4">
+            <div class="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-3 shadow-sm">
+                <span class="text-sm text-teal-300 font-semibold" id="stationDisplay">المحطة: -</span>
+                <button onclick="logoutUser()" class="bg-red-900/40 text-red-400 border border-red-800 text-xs px-3 py-1.5 rounded-xl hover:bg-red-900 transition">تسجيل خروج</button>
             </div>
-            <div class="text-left">
-                <span id="grandTotal" class="text-lg font-bold text-amber-400">0</span>
-                <p class="text-xs text-slate-400">الإجمالي الكلي</p>
+
+            <!-- قسم رفع المقايسة -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
+                <label class="block text-sm font-semibold mb-2 text-slate-300">إرفاق صورة المناقصة / المقايسة</label>
+                <input type="file" id="boqImage" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer">
+                <button onclick="uploadAndProcessBOQ()" id="submitBtn" class="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg flex justify-center items-center">
+                    <span>تحليل وعرض البنود</span>
+                </button>
             </div>
-        </div>
 
-        <h2 class="text-md font-bold text-slate-200 mt-6 mb-3">بنود المقايسة الجارية</h2>
+            <!-- ملخص الحالة العامة -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm flex justify-between items-center">
+                <div>
+                    <span id="itemsCount" class="text-xl font-bold text-teal-400">0</span>
+                    <p class="text-xs text-slate-400">إجمالي البنود المستخرجة</p>
+                </div>
+                <div class="text-left">
+                    <span id="grandTotal" class="text-lg font-bold text-amber-400">0</span>
+                    <p class="text-xs text-slate-400">الإجمالي الكلي</p>
+                </div>
+            </div>
 
-        <!-- قائمة البنود الديناميكية -->
-        <div id="itemsContainer" class="space-y-3">
-            <p class="text-center text-slate-500 text-sm py-6">قم بتسجيل الدخول ورفع صورة المقايسة لعرض بنودك...</p>
+            <h2 class="text-md font-bold text-slate-200 mt-6 mb-3">بنود المقايسة الجارية</h2>
+
+            <!-- قائمة البنود الديناميكية -->
+            <div id="itemsContainer" class="space-y-3">
+                <p class="text-center text-slate-500 text-sm py-6">قم برفع صورة المقايسة لبدء استخراج البنود...</p>
+            </div>
         </div>
 
     </main>
@@ -71,55 +88,98 @@
     </nav>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwm0g_wRJp1f-D8-0vn3o5BAIXMDlDA2gpmXVkFY4sRholWJ-pazF0-7-mjAoxxiI9o/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWJnJIfzoOByu92asweL_pIxZXQy2ajbGzDthm2WYfiMiji_uqR8WlULyXKNt8qtke/exec';
 
-        // عند فتح الصفحة، يتم جلب البيانات إن كان معرف المهندس محفوظاً مسبقاً
         window.onload = function() {
-            const savedEngId = localStorage.getItem('engineer_id');
-            if (savedEngId) {
-                document.getElementById('engineerIdInput').value = savedEngId;
-                fetchEngineerData(savedEngId);
+            const savedStation = localStorage.getItem('station_id');
+            const savedUser = localStorage.getItem('username');
+            if (savedStation && savedUser) {
+                showDashboard(savedUser, savedStation);
+                fetchStationData(savedStation);
             }
         };
 
-        function saveEngineerSession() {
-            const engId = document.getElementById('engineerIdInput').value.trim();
-            if (!engId) {
-                alert('الرجاء إدخال معرف المهندس');
+        async function loginUser() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                alert('الرجاء إدخال اسم المستخدم وكلمة المرور');
                 return;
             }
-            localStorage.setItem('engineer_id', engId);
-            alert('تم حفظ معرف المهندس بنجاح');
-            fetchEngineerData(engId);
+
+            loginBtn.disabled = true;
+            loginBtn.innerText = 'جاري التحقق...';
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'login', username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localStorage.setItem('station_id', result.station_id);
+                    localStorage.setItem('username', result.username);
+                    showDashboard(result.username, result.station_id);
+                    fetchStationData(result.station_id);
+                } else {
+                    alert(result.message || 'بيانات الدخول غير صحيحة');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'دخول';
+            }
         }
 
-        async function fetchEngineerData(engineerId) {
+        function logoutUser() {
+            localStorage.clear();
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('userInfo').innerText = 'تسجيل الدخول مطلوب';
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        }
+
+        function showDashboard(username, stationId) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userInfo').innerText = `م. ${username}`;
+            document.getElementById('stationDisplay').innerText = `المحطة: ${stationId}`;
+        }
+
+        async function fetchStationData(stationId) {
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?engineer_id=${encodeURIComponent(engineerId)}`);
+                const response = await fetch(`${APPS_SCRIPT_URL}?station_id=${encodeURIComponent(stationId)}`);
                 const result = await response.json();
                 renderBOQData(result);
             } catch (error) {
-                console.error('خطأ في جلب بيانات المهندس:', error);
+                console.error('خطأ في جلب بيانات المحطة:', error);
             }
         }
 
         async function uploadAndProcessBOQ() {
-            const engineerId = localStorage.getItem('engineer_id');
-            if (!engineerId) {
-                alert('الرجاء إدخال وحفظ معرف المهندس (Engineer ID) أولاً في الأعلى');
-                return;
-            }
-
+            const stationId = localStorage.getItem('station_id');
             const fileInput = document.getElementById('boqImage');
             const submitBtn = document.getElementById('submitBtn');
             
-            if(fileInput.files.length === 0) {
+            if (!stationId) {
+                alert('يرجى تسجيل الدخول أولاً');
+                return;
+            }
+
+            if (fileInput.files.length === 0) {
                 alert('الرجاء إرفاق صورة المقايسة أولاً');
                 return;
             }
 
             const file = fileInput.files[0];
-            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
@@ -127,7 +187,7 @@
                 const base64Data = await toBase64(file);
                 
                 const payload = {
-                    engineer_id: engineerId, // إرسال معرف المهندس مع البيانات
+                    station_id: stationId, // إرسال رقم المحطة لربط البنود بها تلقائياً
                     fileName: file.name,
                     mimeType: file.type,
                     fileData: base64Data
@@ -135,16 +195,13 @@
 
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) throw new Error('فشل الاتصال بالخادم');
 
                 const result = await response.json();
-                
                 if (result.status === 'error') {
                     throw new Error(result.message || 'حدث خطأ في المعالجة');
                 }
@@ -178,7 +235,7 @@
             container.innerHTML = '';
 
             if (items.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود خاصة بك.</p>';
+                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود لهذه المحطة.</p>';
                 return;
             }
 
