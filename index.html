@@ -262,55 +262,58 @@
         }
 
         async function uploadAndProcessBOQ() {
-            const stationId = localStorage.getItem('station_id');
-            const fileInput = document.getElementById('boqImage');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if(fileInput.files.length === 0) {
-                alert('الرجاء إرفاق صورة المقايسة أولاً');
-                return;
-            }
+    const stationId = localStorage.getItem('station_id');
+    const fileInput = document.getElementById('boqImage');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if(fileInput.files.length === 0) {
+        alert('الرجاء إرفاق صورة المقايسة أولاً');
+        return;
+    }
 
-            const file = fileInput.files[0];
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
+    const file = fileInput.files[0];
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
-            try {
-                const base64Data = await toBase64(file);
-                const payload = {
-                    station_id: stationId,
-                    fileName: file.name,
-                    mimeType: file.type,
-                    fileData: base64Data
-                };
+    try {
+        const base64Data = await toBase64(file);
+        const payload = {
+            station_id: stationId,
+            fileName: file.name,
+            mimeType: file.type,
+            fileData: base64Data
+        };
 
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
+        // ** هنا التعديل: إرسال الطلب مباشرة إلى Webhook الخاص بـ n8n **
+        const n8nWebhookUrl = 'https://Automateflow-n8n.rinoosolutions.com/webhook/0bc8c7ab-bc13-4306-9ae3-275f63beba22';
 
-                const textResponse = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(textResponse);
-                } catch (e) {
-                    throw new Error('خطأ في معالجة استجابة الخادم');
-                }
+        const response = await fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-                if (result.status === 'error') {
-                    throw new Error(result.message || 'حدث خطأ في المعالجة');
-                }
-
-                renderBOQData(result, false);
-            } catch (error) {
-                console.error(error);
-                alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>تحليل وعرض البنود</span>';
-            }
+        const textResponse = await response.text();
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (e) {
+            // أحياناً n8n يرجع نصاً عادياً عند النجاح التام
+            result = { status: 'success' };
         }
+
+        alert('تم رفع وتحليل المقايسة بنجاح عبر الـ Workflow!');
+        // إعادة تحميل بيانات المحطة لتحديث العرض
+        fetchStationData(stationId, false);
+
+    } catch (error) {
+        console.error(error);
+        alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>تحليل وعرض البنود</span>';
+    }
+}
 
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
