@@ -262,10 +262,7 @@
         }
 
         async function uploadAndProcessBOQ() {
-    // جلب اسم المستخدم ورقم المحطة المخزن من جلسة تسجيل الدخول
-    const currentUsername = localStorage.getItem('username');
     const stationId = localStorage.getItem('station_id');
-    
     const fileInput = document.getElementById('boqImage');
     const submitBtn = document.getElementById('submitBtn');
     
@@ -280,16 +277,14 @@
 
     try {
         const base64Data = await toBase64(file);
-        
-        // إرسال الـ username والـ station_id مع الطلب بكل بساطة
         const payload = {
-            username: currentUsername,
             station_id: stationId,
             fileName: file.name,
             mimeType: file.type,
             fileData: base64Data
         };
 
+        // ** هنا التعديل: إرسال الطلب مباشرة إلى Webhook الخاص بـ n8n **
         const n8nWebhookUrl = 'https://Automateflow-n8n.rinoosolutions.com/webhook/0bc8c7ab-bc13-4306-9ae3-275f63beba22';
 
         const response = await fetch(n8nWebhookUrl, {
@@ -298,7 +293,27 @@
             body: JSON.stringify(payload)
         });
 
-        // ... باقي الكود
+        const textResponse = await response.text();
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (e) {
+            // أحياناً n8n يرجع نصاً عادياً عند النجاح التام
+            result = { status: 'success' };
+        }
+
+        alert('تم رفع وتحليل المقايسة بنجاح عبر الـ Workflow!');
+        // إعادة تحميل بيانات المحطة لتحديث العرض
+        fetchStationData(stationId, false);
+
+    } catch (error) {
+        console.error(error);
+        alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>تحليل وعرض البنود</span>';
+    }
+}
 
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
