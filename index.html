@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام متابعة المقايسات - تسجيل الدخول</title>
+    <title>محطة الريحانة - متابعة المقايسات</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -15,68 +15,93 @@
     <!-- رأس الصفحة -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="text-xs text-slate-400" id="userInfo">تسجيل الدخول مطلوب</div>
-            <h1 class="text-lg font-bold text-teal-400">نظام إدارة المشاريع</h1>
+            <div class="text-xs text-slate-400">متابعة الموقع</div>
+            <h1 class="text-lg font-bold text-teal-400">محطة الريحانة</h1>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- شاشة تسجيل الدخول -->
-        <div id="loginSection" class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-sm">
-            <h2 class="text-md font-bold text-teal-400 mb-4 text-center">تسجيل دخول المهندس</h2>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold mb-1 text-slate-300">اسم المستخدم</label>
-                    <input type="text" id="usernameInput" placeholder="أدخل اسم المستخدم" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold mb-1 text-slate-300">كلمة المرور</label>
-                    <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
-                </div>
-                <button onclick="loginUser()" id="loginBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg mt-2">
-                    دخول
-                </button>
+        <!-- قسم تسجيل دخول المهندس -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
+            <label class="block text-sm font-semibold mb-2 text-slate-300">معرف المهندس / المحطة (Engineer ID)</label>
+            <div class="flex gap-2">
+                <input type="text" id="engineerIdInput" placeholder="أدخل رقمك التعريفي (مثال: rihana_00)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
+                <button onclick="saveEngineerSession()" class="bg-slate-700 hover:bg-slate-600 text-teal-400 text-xs font-bold px-4 py-2 rounded-xl transition">حفظ</button>
             </div>
         </div>
 
-        <!-- لوحة التحكم (تُخفي حتى يتم تسجيل الدخول) -->
-        <div id="dashboardSection" class="hidden space-y-4">
-            <div class="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-3 shadow-sm">
-                <span class="text-sm text-teal-300 font-semibold" id="stationDisplay">المحطة: -</span>
-                <button onclick="logoutUser()" class="bg-red-900/40 text-red-400 border border-red-800 text-xs px-3 py-1.5 rounded-xl hover:bg-red-900 transition">تسجيل خروج</button>
-            </div>
+        <!-- قسم رفع المقايسة -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
+            <label class="block text-sm font-semibold mb-2 text-slate-300">إرفاق صورة المناقصة / المقايسة</label>
+            <input type="file" id="boqImage" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer">
+            <button onclick="uploadAndProcessBOQ()" id="submitBtn" class="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg flex justify-center items-center">
+                <span>تحليل وعرض البنود</span>
+            </button>
+        </div>
 
-            <!-- قسم رفع المقايسة -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
-                <label class="block text-sm font-semibold mb-2 text-slate-300">إرفاق صورة المناقصة / المقايسة</label>
-                <input type="file" id="boqImage" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer">
-                <button onclick="uploadAndProcessBOQ()" id="submitBtn" class="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg flex justify-center items-center">
-                    <span>تحليل وعرض البنود</span>
-                </button>
+        <!-- ملخص الحالة العامة -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm flex justify-between items-center">
+            <div>
+                <span id="itemsCount" class="text-xl font-bold text-teal-400">0</span>
+                <p class="text-xs text-slate-400">إجمالي البنود المستخرجة</p>
             </div>
-
-            <!-- ملخص الحالة العامة -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm flex justify-between items-center">
-                <div>
-                    <span id="itemsCount" class="text-xl font-bold text-teal-400">0</span>
-                    <p class="text-xs text-slate-400">إجمالي البنود المستخرجة</p>
-                </div>
-                <div class="text-left">
-                    <span id="grandTotal" class="text-lg font-bold text-amber-400">0</span>
-                    <p class="text-xs text-slate-400">الإجمالي الكلي</p>
-                </div>
+            <div class="text-left">
+                <span id="grandTotal" class="text-lg font-bold text-amber-400">0</span>
+                <p class="text-xs text-slate-400">الإجمالي الكلي</p>
             </div>
+        </div>
 
-            <h2 class="text-md font-bold text-slate-200 mt-6 mb-3">بنود المقايسة الجارية</h2>
+        <h2 class="text-md font-bold text-slate-200 mt-6 mb-3">بنود المقايسة الجارية (انقر على أي بند لتحديثه)</h2>
 
-            <!-- قائمة البنود الديناميكية -->
-            <div id="itemsContainer" class="space-y-3">
-                <p class="text-center text-slate-500 text-sm py-6">قم برفع صورة المقايسة لبدء استخراج البنود...</p>
-            </div>
+        <!-- قائمة البنود الديناميكية -->
+        <div id="itemsContainer" class="space-y-3">
+            <p class="text-center text-slate-500 text-sm py-6">قم بتسجيل الدخول ورفع صورة المقايسة لعرض بنودك...</p>
         </div>
 
     </main>
+
+    <!-- نافذة تحديث البند (Modal) -->
+    <div id="updateModal" class="fixed inset-0 bg-slate-950/80 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-md font-bold text-teal-400" id="modalItemTitle">تحديث بند</h3>
+                <button onclick="closeUpdateModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+
+            <input type="hidden" id="modalItemNumber">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">نسبة المنفذ مدني %</label>
+                    <input type="number" id="civilProgress" placeholder="0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">نسبة المنفذ كهروميكانيكي %</label>
+                    <input type="number" id="electroProgress" placeholder="0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">ما تم إنجازه اليوم</label>
+                <textarea id="workDoneToday" rows="2" placeholder="اكتب ما تم إنجازه..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">معوقات (إن وجدت)</label>
+                <textarea id="workObstacles" rows="2" placeholder="ذكر أي معوقات..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">إرفاق صور الموقع</label>
+                <input type="file" id="updateImages" multiple accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-teal-300 hover:file:bg-slate-600 cursor-pointer">
+            </div>
+
+            <button onclick="submitItemUpdate()" id="updateSubmitBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg">
+                إرسال التحديث وحفظ الصور
+            </button>
+        </div>
+    </div>
 
     <!-- شريط التنقل السفلي -->
     <nav class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 py-3 px-6 shadow-lg">
@@ -88,93 +113,48 @@
     </nav>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSb8tJH7vYeKgBn7bA8geryoWiXV4iOBqLcfWvNLDJB-guIhhRrKzMnOhDYb6F0mzg/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfxN7Qi5WPO0TkRxeZHQNK94gNGysQ3RQRtIOaGi-7zYMQ6xIkFC3JgDhXIUBzxY1e/exec';
 
         window.onload = function() {
-            const savedStation = localStorage.getItem('station_id');
-            const savedUser = localStorage.getItem('username');
-            if (savedStation && savedUser) {
-                showDashboard(savedUser, savedStation);
-                fetchStationData(savedStation);
+            const savedEngId = localStorage.getItem('engineer_id');
+            if (savedEngId) {
+                document.getElementById('engineerIdInput').value = savedEngId;
+                fetchEngineerData(savedEngId);
             }
         };
 
-        async function loginUser() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            const loginBtn = document.getElementById('loginBtn');
-
-            if (!username || !password) {
-                alert('الرجاء إدخال اسم المستخدم وكلمة المرور');
+        function saveEngineerSession() {
+            const engId = document.getElementById('engineerIdInput').value.trim();
+            if (!engId) {
+                alert('الرجاء إدخال معرف المهندس');
                 return;
             }
+            localStorage.setItem('engineer_id', engId);
+            alert('تم حفظ معرف المهندس بنجاح');
+            fetchEngineerData(engId);
+        }
 
-            loginBtn.disabled = true;
-            loginBtn.innerText = 'جاري التحقق...';
-
+        async function fetchEngineerData(engineerId) {
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'login', username, password })
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    localStorage.setItem('station_id', result.station_id);
-                    localStorage.setItem('username', result.username);
-                    showDashboard(result.username, result.station_id);
-                    fetchStationData(result.station_id);
-                } else {
-                    alert(result.message || 'بيانات الدخول غير صحيحة');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('حدث خطأ أثناء الاتصال بالخادم');
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerText = 'دخول';
-            }
-        }
-
-        function logoutUser() {
-            localStorage.clear();
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('userInfo').innerText = 'تسجيل الدخول مطلوب';
-            document.getElementById('usernameInput').value = '';
-            document.getElementById('passwordInput').value = '';
-        }
-
-        function showDashboard(username, stationId) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('dashboardSection').classList.remove('hidden');
-            document.getElementById('userInfo').innerText = `م. ${username}`;
-            document.getElementById('stationDisplay').innerText = `المحطة: ${stationId}`;
-        }
-
-        async function fetchStationData(stationId) {
-            try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?station_id=${encodeURIComponent(stationId)}`);
+                const response = await fetch(`${APPS_SCRIPT_URL}?engineer_id=${encodeURIComponent(engineerId)}`);
                 const result = await response.json();
                 renderBOQData(result);
             } catch (error) {
-                console.error('خطأ في جلب بيانات المحطة:', error);
+                console.error('خطأ في جلب بيانات المهندس:', error);
             }
         }
 
         async function uploadAndProcessBOQ() {
-            const stationId = localStorage.getItem('station_id');
-            const fileInput = document.getElementById('boqImage');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (!stationId) {
-                alert('يرجى تسجيل الدخول أولاً');
+            const engineerId = localStorage.getItem('engineer_id');
+            if (!engineerId) {
+                alert('الرجاء إدخال وحفظ معرف المهندس (Engineer ID) أولاً في الأعلى');
                 return;
             }
 
-            if (fileInput.files.length === 0) {
+            const fileInput = document.getElementById('boqImage');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if(fileInput.files.length === 0) {
                 alert('الرجاء إرفاق صورة المقايسة أولاً');
                 return;
             }
@@ -185,9 +165,8 @@
 
             try {
                 const base64Data = await toBase64(file);
-                
                 const payload = {
-                    station_id: stationId, // إرسال رقم المحطة لربط البنود بها تلقائياً
+                    engineer_id: engineerId,
                     fileName: file.name,
                     mimeType: file.type,
                     fileData: base64Data
@@ -207,7 +186,6 @@
                 }
 
                 renderBOQData(result);
-
             } catch (error) {
                 console.error(error);
                 alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
@@ -235,13 +213,14 @@
             container.innerHTML = '';
 
             if (items.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود لهذه المحطة.</p>';
+                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود خاصة بك.</p>';
                 return;
             }
 
             items.forEach(item => {
+                const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
                 const card = `
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm hover:border-teal-500 transition">
+                    <div onclick="openUpdateModal(${itemJson})" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm hover:border-teal-500 cursor-pointer transition">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs bg-slate-700 text-teal-400 px-2 py-1 rounded-lg font-mono">بند: ${item.item_number || '-'}</span>
                             <span class="text-xs bg-amber-900/40 text-amber-300 px-2 py-1 rounded-lg">${item.unit || '-'}</span>
@@ -265,6 +244,84 @@
                 `;
                 container.innerHTML += card;
             });
+        }
+
+        function openUpdateModal(item) {
+            document.getElementById('modalItemTitle').innerText = 'تحديث البند: ' + (item.title || item.description || '');
+            document.getElementById('modalItemNumber').value = item.item_number || '';
+            
+            document.getElementById('civilProgress').value = item.civil_progress || '';
+            document.getElementById('electroProgress').value = item.electro_progress || '';
+            document.getElementById('workDoneToday').value = item.work_done || '';
+            document.getElementById('workObstacles').value = item.obstacles || '';
+            document.getElementById('updateImages').value = '';
+
+            document.getElementById('updateModal').classList.remove('hidden');
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.add('hidden');
+        }
+
+        async function submitItemUpdate() {
+            const engineerId = localStorage.getItem('engineer_id');
+            const itemNumber = document.getElementById('modalItemNumber').value;
+            const civilProgress = document.getElementById('civilProgress').value;
+            const electroProgress = document.getElementById('electroProgress').value;
+            const workDoneToday = document.getElementById('workDoneToday').value;
+            const workObstacles = document.getElementById('workObstacles').value;
+            const fileInput = document.getElementById('updateImages');
+            const updateBtn = document.getElementById('updateSubmitBtn');
+
+            updateBtn.disabled = true;
+            updateBtn.innerText = 'جاري الرفع والتحديث...';
+
+            let imagesArray = [];
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    const base64Data = await toBase64(file);
+                    imagesArray.push({
+                        name: file.name,
+                        type: file.type,
+                        data: base64Data
+                    });
+                }
+            }
+
+            const payload = {
+                action: 'update_item',
+                engineer_id: engineerId,
+                item_number: itemNumber,
+                civil_progress: civilProgress,
+                electro_progress: electroProgress,
+                work_done: workDoneToday,
+                obstacles: workObstacles,
+                images: imagesArray
+            };
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('تم تحديث البند وحفظ الصور بنجاح!');
+                    closeUpdateModal();
+                    fetchEngineerData(engineerId); // تحديث القائمة بعد الحفظ
+                } else {
+                    alert('حدث خطأ: ' + (result.message || 'فشل التحديث'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('فشل الاتصال بالخادم');
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.innerText = 'إرسال التحديث وحفظ الصور';
+            }
         }
     </script>
 </body>
