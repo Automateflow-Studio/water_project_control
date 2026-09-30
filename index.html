@@ -28,19 +28,17 @@
             <button onclick="loginUser()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-xl transition text-sm">تسجيل الدخول</button>
         </div>
 
-        <!-- لوحة تحكم المدير (تظهر للمدير فقط) -->
+        <!-- لوحة تحكم المدير -->
         <div id="managerDashboard" class="hidden space-y-4">
             <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3 flex justify-between items-center text-xs">
                 <span class="text-teal-400 font-bold">لوحة تحكم المدير العام</span>
                 <button onclick="logout()" class="text-red-400 hover:text-red-300 font-bold">تسجيل الخروج</button>
             </div>
             <h2 class="text-sm font-bold text-slate-200">المحطات المسجلة (اختر محطة لعرض بنودها):</h2>
-            <div id="stationsListContainer" class="space-y-2">
-                <!-- يتم تعبئتها ديناميكياً -->
-            </div>
+            <div id="stationsListContainer" class="space-y-2"></div>
         </div>
 
-        <!-- قسم محتوى المحطة للمهندس أو عند اختيار المدير لمحطة -->
+        <!-- قسم محتوى المحطة -->
         <div id="dashboardSection" class="hidden space-y-4">
             <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3 flex justify-between items-center text-xs">
                 <span class="text-slate-400">المحطة: <strong id="currentStationId" class="text-teal-400 font-mono"></strong></span>
@@ -50,7 +48,7 @@
                 </div>
             </div>
 
-            <!-- قسم رفع المقايسة يظهر للمهندس الخاص بالمحطة فقط -->
+            <!-- قسم رفع المقايسة للمهندس -->
             <div id="uploadSection" class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm hidden">
                 <label class="block text-sm font-semibold mb-2 text-slate-300">إرفاق صورة المناقصة / المقايسة</label>
                 <input type="file" id="boqImage" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer">
@@ -73,7 +71,6 @@
 
             <h2 id="itemsHeaderTitle" class="text-md font-bold text-slate-200 mt-6 mb-3">بنود المقايسة</h2>
 
-            <!-- قائمة البنود الديناميكية -->
             <div id="itemsContainer" class="space-y-3">
                 <p class="text-center text-slate-500 text-sm py-6">جاري التحميل...</p>
             </div>
@@ -81,7 +78,7 @@
 
     </main>
 
-    <!-- نافذة تحديث البند (تظهر للمهندس المالك لمحطته فقط) -->
+    <!-- نافذة تحديث البند -->
     <div id="updateModal" class="fixed inset-0 bg-slate-950/80 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-md space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -119,7 +116,7 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZWMxBO-Mj9346kzJgz0OGRtXIiaqadMIEVYVWgndX5qp9GfJDUARJKjCf6ZyCFhgU/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxg_645kwu88Lram2IJ7sF9RWjoGPAnDV6qW95MQNLJZn5MbfKtxtFLL-ElrhbgKAko/exec';
 
         window.onload = function() {
             const savedUser = localStorage.getItem('username');
@@ -151,7 +148,14 @@
                     body: JSON.stringify({ action: 'login', username, password })
                 });
 
-                const result = await response.json();
+                const textResponse = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(textResponse);
+                } catch (e) {
+                    throw new Error('استجابة غير صالحة من الخادم');
+                }
+
                 if (result.status === 'success') {
                     localStorage.setItem('username', result.username);
                     localStorage.setItem('role', result.role);
@@ -167,7 +171,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert('حدث خطأ أثناء الاتصال بالخادم');
+                alert('حدث خطأ أثناء الاتصال بالخادم، يرجى المحاولة مرة أخرى.');
             }
         }
 
@@ -178,7 +182,8 @@
 
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=get_stations`);
-                const result = await response.json();
+                const textResponse = await response.text();
+                const result = JSON.parse(textResponse);
                 renderStationsList(result.stations || []);
             } catch (err) {
                 console.error(err);
@@ -248,7 +253,8 @@
         async function fetchStationData(stationId, isManagerView) {
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?station_id=${encodeURIComponent(stationId)}`);
-                const result = await response.json();
+                const textResponse = await response.text();
+                const result = JSON.parse(textResponse);
                 renderBOQData(result, isManagerView);
             } catch (error) {
                 console.error('خطأ في جلب بيانات المحطة:', error);
@@ -284,9 +290,14 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error('فشل الاتصال بالخادم');
+                const textResponse = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(textResponse);
+                } catch (e) {
+                    throw new Error('خطأ في معالجة استجابة الخادم');
+                }
 
-                const result = await response.json();
                 if (result.status === 'error') {
                     throw new Error(result.message || 'حدث خطأ في المعالجة');
                 }
@@ -409,7 +420,14 @@
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
+                const textResponse = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(textResponse);
+                } catch (e) {
+                    throw new Error('فشل قراءة الاستجابة');
+                }
+
                 if (result.status === 'success') {
                     alert('تم تحديث البند بنجاح!');
                     closeUpdateModal();
