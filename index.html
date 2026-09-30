@@ -15,12 +15,21 @@
     <!-- رأس الصفحة -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="text-xs text-slate-400">م. كريم • مهندس موقع</div>
+            <div class="text-xs text-slate-400">متابعة الموقع</div>
             <h1 class="text-lg font-bold text-teal-400">محطة الريحانة</h1>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
+
+        <!-- قسم تسجيل دخول المهندس -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
+            <label class="block text-sm font-semibold mb-2 text-slate-300">معرف المهندس (Engineer ID)</label>
+            <div class="flex gap-2">
+                <input type="text" id="engineerIdInput" placeholder="أدخل رقمك التعريفي (مثال: eng_01)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm">
+                <button onclick="saveEngineerSession()" class="bg-slate-700 hover:bg-slate-600 text-teal-400 text-xs font-bold px-4 py-2 rounded-xl transition">حفظ</button>
+            </div>
+        </div>
 
         <!-- قسم رفع المقايسة -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-sm">
@@ -47,7 +56,7 @@
 
         <!-- قائمة البنود الديناميكية -->
         <div id="itemsContainer" class="space-y-3">
-            <p class="text-center text-slate-500 text-sm py-6">قم برفع صورة المقايسة لبدء استخراج البنود وتحليلها...</p>
+            <p class="text-center text-slate-500 text-sm py-6">قم بتسجيل الدخول ورفع صورة المقايسة لعرض بنودك...</p>
         </div>
 
     </main>
@@ -61,11 +70,46 @@
         </div>
     </nav>
 
-    <!-- ربط الـ Frontend مع Google Apps Script الجديد -->
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWJnJIfzoOByu92asweL_pIxZXQy2ajbGzDthm2WYfiMiji_uqR8WlULyXKNt8qtke/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwm0g_wRJp1f-D8-0vn3o5BAIXMDlDA2gpmXVkFY4sRholWJ-pazF0-7-mjAoxxiI9o/exec';
+
+        // عند فتح الصفحة، يتم جلب البيانات إن كان معرف المهندس محفوظاً مسبقاً
+        window.onload = function() {
+            const savedEngId = localStorage.getItem('engineer_id');
+            if (savedEngId) {
+                document.getElementById('engineerIdInput').value = savedEngId;
+                fetchEngineerData(savedEngId);
+            }
+        };
+
+        function saveEngineerSession() {
+            const engId = document.getElementById('engineerIdInput').value.trim();
+            if (!engId) {
+                alert('الرجاء إدخال معرف المهندس');
+                return;
+            }
+            localStorage.setItem('engineer_id', engId);
+            alert('تم حفظ معرف المهندس بنجاح');
+            fetchEngineerData(engId);
+        }
+
+        async function fetchEngineerData(engineerId) {
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?engineer_id=${encodeURIComponent(engineerId)}`);
+                const result = await response.json();
+                renderBOQData(result);
+            } catch (error) {
+                console.error('خطأ في جلب بيانات المهندس:', error);
+            }
+        }
 
         async function uploadAndProcessBOQ() {
+            const engineerId = localStorage.getItem('engineer_id');
+            if (!engineerId) {
+                alert('الرجاء إدخال وحفظ معرف المهندس (Engineer ID) أولاً في الأعلى');
+                return;
+            }
+
             const fileInput = document.getElementById('boqImage');
             const submitBtn = document.getElementById('submitBtn');
             
@@ -83,6 +127,7 @@
                 const base64Data = await toBase64(file);
                 
                 const payload = {
+                    engineer_id: engineerId, // إرسال معرف المهندس مع البيانات
                     fileName: file.name,
                     mimeType: file.type,
                     fileData: base64Data
@@ -133,7 +178,7 @@
             container.innerHTML = '';
 
             if (items.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود في الصورة.</p>';
+                container.innerHTML = '<p class="text-center text-slate-500 text-sm py-6">لم يتم العثور على بنود خاصة بك.</p>';
                 return;
             }
 
