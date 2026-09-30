@@ -106,13 +106,8 @@
                 <textarea id="workObstacles" rows="2" placeholder="ذكر أي معوقات..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200"></textarea>
             </div>
 
-            <div>
-                <label class="block text-xs text-slate-400 mb-1">إرفاق صور الموقع</label>
-                <input type="file" id="updateImages" multiple accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-teal-300 hover:file:bg-slate-600 cursor-pointer">
-            </div>
-
             <button onclick="submitItemUpdate()" id="updateSubmitBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl transition shadow-lg">
-                إرسال التحديث وحفظ الصور
+                إرسال التحديث وحفظ البيانات
             </button>
         </div>
     </div>
@@ -127,7 +122,7 @@
     </nav>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTCspVsbIjQTnbluE9_szLbGzG9aDNMTwYfYM3f9QJPMUeebs-ztroRsFpRu8WkfWY/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-5WDQhxpUf3GosS3FU3p8N01c5Gdi2yG1WQHkq_YKf4AKYdgI_YO6SqNrnq0UjmdQ/exec';
 
         window.onload = function() {
             const savedUser = localStorage.getItem('username');
@@ -302,7 +297,6 @@
             document.getElementById('electroProgress').value = item.electro_progress || '';
             document.getElementById('workDoneToday').value = item.work_done || '';
             document.getElementById('workObstacles').value = item.obstacles || '';
-            document.getElementById('updateImages').value = '';
 
             document.getElementById('updateModal').classList.remove('hidden');
         }
@@ -318,24 +312,10 @@
             const electroProgress = document.getElementById('electroProgress').value;
             const workDoneToday = document.getElementById('workDoneToday').value;
             const workObstacles = document.getElementById('workObstacles').value;
-            const fileInput = document.getElementById('updateImages');
             const updateBtn = document.getElementById('updateSubmitBtn');
 
             updateBtn.disabled = true;
-            updateBtn.innerText = 'جاري الرفع والتحديث...';
-
-            let imagesArray = [];
-            if (fileInput.files.length > 0) {
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    const file = fileInput.files[i];
-                    const base64Data = await toBase64(file);
-                    imagesArray.push({
-                        name: file.name,
-                        type: file.type,
-                        data: base64Data
-                    });
-                }
-            }
+            updateBtn.innerText = 'جاري التحديث...';
 
             const payload = {
                 action: 'update_item',
@@ -344,8 +324,7 @@
                 civil_progress: civilProgress,
                 electro_progress: electroProgress,
                 work_done: workDoneToday,
-                obstacles: workObstacles,
-                images: imagesArray
+                obstacles: workObstacles
             };
 
             try {
@@ -357,7 +336,7 @@
 
                 const result = await response.json();
                 if (result.status === 'success') {
-                    alert('تم تحديث البند وحفظ الصور بنجاح!');
+                    alert('تم تحديث البند بنجاح!');
                     closeUpdateModal();
                     fetchEngineerData(stationId);
                 } else {
@@ -368,7 +347,7 @@
                 alert('فشل الاتصال بالخادم');
             } finally {
                 updateBtn.disabled = false;
-                updateBtn.innerText = 'إرسال التحديث وحفظ الصور';
+                updateBtn.innerText = 'إرسال التحديث وحفظ البيانات';
             }
         }
     </script>
