@@ -116,7 +116,7 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmk4W6ydTaWzqHOy2lf6TTxGBOalJ2DymPlR9mU2bzcJKjo9-uG7DPKK72Y81gVxMv/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEoJr783u6U1gwq3UGevIVbDXCEyDoV0YfxCV7SHLYy_DVKJNktYISzfeXkN2fOylz/exec';
 
         window.onload = function() {
             const savedUser = localStorage.getItem('username');
@@ -142,19 +142,19 @@
             }
 
             try {
+                
+
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'login', username, password })
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: username,
+                        password: password
+                    })
                 });
 
-                const textResponse = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(textResponse);
-                } catch (e) {
-                    throw new Error('استجابة غير صالحة من الخادم');
-                }
+                const result = await response.json();
 
                 if (result.status === 'success') {
                     localStorage.setItem('username', result.username);
@@ -289,23 +289,18 @@
                     fileData: base64Data
                 };
 
-                const n8nWebhookUrl = 'https://script.google.com/macros/s/AKfycbxz61SyXpMb5bxdXwYo8zBXhx5jo9FW7725sQ_yxovsYbNBuvhAOdD8PZXcMImOxj-o/exec';
-
-                const response = await fetch(n8nWebhookUrl, {
+                const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'upload_boq', ...payload })
                 });
 
-                const textResponse = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(textResponse);
-                } catch (e) {
-                    result = { status: 'success' };
+                const result = await response.json();
+                if (result.status === 'error') {
+                    throw new Error(result.message || 'فشلت معالجة المقايسة');
                 }
 
-                alert('تم رفع وتحليل المقايسة بنجاح عبر الـ Workflow!');
+                alert('تم رفع وتحليل المقايسة بنجاح');
                 fetchStationData(stationId, false);
 
             } catch (error) {
