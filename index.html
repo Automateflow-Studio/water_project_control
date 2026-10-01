@@ -222,9 +222,11 @@
             document.getElementById('itemsHeaderTitle').innerText = `بنود محطة: ${stationId} (مشاهدة التحديثات)`;
 
             fetchStationData(stationId, true);
+            startPolling(stationId, true);
         }
 
         function backToManager() {
+            stopPolling();
             document.getElementById('dashboardSection').classList.add('hidden');
             showManagerDashboard(localStorage.getItem('username'));
         }
@@ -239,9 +241,11 @@
             document.getElementById('itemsHeaderTitle').innerText = 'بنود المقايسة الجارية (انقر لتحديث البند)';
 
             fetchStationData(stationId, false);
+            startPolling(stationId, false);
         }
 
         function logout() {
+            stopPolling();
             localStorage.clear();
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('managerDashboard').classList.add('hidden');
@@ -250,16 +254,57 @@
             document.getElementById('passwordInput').value = '';
         }
 
-        async function fetchStationData(stationId, isManagerView) {
+        // ===== تحديث تلقائي (Polling) =====
+        let pollTimer = null;
+        let lastSignature = null;
+        let fastPollUntil = 0;
+        let currentView = null;
+        const POLL_IDLE_MS = 10000;  // كل 10 ثواني في الوضع العادي
+        const POLL_FAST_MS = 3000;   // كل 3 ثواني أثناء تحليل المقايسة
+
+        async function fetchStationData(stationId, isManagerView, silent = false) {
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?station_id=${encodeURIComponent(stationId)}`);
-                const textResponse = await response.text();
-                const result = JSON.parse(textResponse);
+                const result = JSON.parse(await response.text());
+                if (result.status === 'error') throw new Error(result.message || 'خطأ من الخادم');
+
+                // لا نعيد الرسم إذا لم تتغير البيانات (يمنع الوميض وقفز الصفحة)
+                const signature = JSON.stringify([result.items, result.grand_total]);
+                if (silent && signature === lastSignature) return;
+                lastSignature = signature;
+
                 renderBOQData(result, isManagerView);
             } catch (error) {
-                console.error('خطأ في جلب بيانات المحطة:', error);
+                if (!silent) console.error('خطأ في جلب بيانات المحطة:', error);
             }
         }
+
+        function startPolling(stationId, isManagerView) {
+            stopPolling();
+            lastSignature = null;
+            currentView = { stationId, isManagerView };
+            const tick = async () => {
+                if (!document.hidden) {
+                    await fetchStationData(stationId, isManagerView, true);
+                }
+                const delay = Date.now() < fastPollUntil ? POLL_FAST_MS : POLL_IDLE_MS;
+                pollTimer = setTimeout(tick, delay);
+            };
+            pollTimer = setTimeout(tick, POLL_FAST_MS);
+        }
+
+        function stopPolling() {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+            currentView = null;
+        }
+
+        // عند رجوع المستخدم للتبويب، حدّث فوراً
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && currentView) {
+                fetchStationData(currentView.stationId, currentView.isManagerView, true);
+            }
+        });
 
         async function uploadAndProcessBOQ() {
             // جلب اسم المستخدم ورقم المحطة المخزن من الجلسة الحالية
@@ -275,6 +320,7 @@
 
             const file = fileInput.files[0];
             submitBtn.disabled = true;
+            fastPollUntil = Date.now() + 180000; // تحديث سريع أثناء المعالجة
             submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
             try {
@@ -307,6 +353,7 @@
                 console.error(error);
                 alert('حدث خطأ أثناء رفع الصورة أو تحليلها: ' + error.message);
             } finally {
+                fastPollUntil = 0;
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>تحليل وعرض البنود</span>';
             }
