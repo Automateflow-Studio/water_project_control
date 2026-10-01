@@ -278,7 +278,7 @@
             submitBtn.innerHTML = '<span class="animate-pulse">جاري رفع وتحليل المقايسة...</span>';
 
             try {
-                const base64Data = __toBase64 ? await __toBase64(file) : await toBase64(file);
+                const base64Data = await toBase64(file);
                 
                 // إرسال الـ username والـ station_id مع الـ payload بمرونة تامة
                 const payload = {
@@ -289,7 +289,7 @@
                     fileData: base64Data
                 };
 
-                const n8nWebhookUrl = 'https://Automateflow-n8n.rinoosolutions.com/webhook/0bc8c7ab-bc13-4306-9ae3-275f63beba22';
+                const n8nWebhookUrl = 'https://script.google.com/macros/s/AKfycbxz61SyXpMb5bxdXwYo8zBXhx5jo9FW7725sQ_yxovsYbNBuvhAOdD8PZXcMImOxj-o/exec';
 
                 const response = await fetch(n8nWebhookUrl, {
                     method: 'POST',
